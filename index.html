@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>隨機迷宮遊戲</title>
+    <title>迷宮遊戲</title>
     <style>
         body {
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -16,26 +17,71 @@
         canvas {
             border: 2px solid #000;
         }
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .control-row {
+            display: flex;
+        }
+        button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            border: 1px solid #000;
+            border-radius: 10px;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #bbb;
+        }
+        #fullscreen-video {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
     <canvas id="mazeCanvas" width="400" height="400"></canvas>
+    <div id="controls">
+        <div class="control-row">
+            <button onclick="movePlayer(0, -1)">↑</button>
+        </div>
+        <div class="control-row">
+            <button onclick="movePlayer(-1, 0)">←</button>
+            <button onclick="movePlayer(1, 0)">→</button>
+        </div>
+        <div class="control-row">
+            <button onclick="movePlayer(0, 1)">↓</button>
+        </div>
+    </div>
+    <audio id="backgroundMusic" src="your-audio-url.mp3" loop></audio>
+    <video id="fullscreen-video" src="your-video-url.mp4" controls></video>
     <script>
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
-        const cellSize = 40; // 每個迷宮格子的大小
+        const cellSize = 40; 
         const cols = 10;
         const rows = 10;
 
-        // 圖片資源 (替換為實際圖片URL)
         const images = {
-            player: 'player-image-url.png', // 玩家圖片
-            wall: 'wall-image-url.png',    // 牆圖片
-            ground: 'ground-image-url.jpg',// 地板圖片
-            exit: 'exit-image-url.png'     // 出口圖片
+            player: 'player-image-url.png',
+            wall: 'wall-image-url.png',
+            ground: 'ground-image-url.jpg',
+            exit: 'exit-image-url.png'
         };
 
-        // 定義10種預設迷宮 (0: 空地, 1: 牆壁, 2: 出口)
         const mazes = [
             [
                 [0, 1, 0, 0, 0, 0, 0, 0, 0, 2],
@@ -49,10 +95,9 @@
                 [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
                 [0, 1, 1, 1, 1, 0, 0, 0, 0, 0]
             ],
-            // 其他 9 個迷宮設計
             [
-                [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+                [0, 0, 0, 1, 1, 1, 1, 1, 1, 2],
+                [0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
                 [1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
                 [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                 [1, 0, 1, 0, 1, 0, 1, 1, 1, 0],
@@ -61,26 +106,15 @@
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-            ],
-            [
-                [0, 0, 0, 0, 0, 1, 1, 1, 1, 2],
-                [1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-                [0, 0, 0, 1, 0, 1, 1, 1, 1, 0],
-                [0, 1, 0, 1, 0, 0, 0, 1, 1, 0],
-                [0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-                [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
-            ],
-            // 添加更多迷宮設計...
+            ]
         ];
 
-        // 隨機選擇迷宮
         const maze = mazes[Math.floor(Math.random() * mazes.length)];
 
         const player = { x: 0, y: 0 };
+
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const fullscreenVideo = document.getElementById('fullscreen-video');
 
         const loadedImages = {};
         const loadImage = (key, src) => {
@@ -97,6 +131,7 @@
         Promise.all(
             Object.entries(images).map(([key, src]) => loadImage(key, src))
         ).then(() => {
+            backgroundMusic.play(); 
             render();
         });
 
@@ -139,7 +174,9 @@
                 render();
 
                 if (maze[newY][newX] === 2) {
-                    alert('恭喜通關！');
+                    backgroundMusic.pause(); 
+                    fullscreenVideo.style.display = 'block'; 
+                    fullscreenVideo.play();
                 }
             }
         }
@@ -148,23 +185,6 @@
             drawMaze();
             drawPlayer();
         }
-
-        document.addEventListener('keydown', (e) => {
-            switch (e.key) {
-                case 'ArrowUp':
-                    movePlayer(0, -1);
-                    break;
-                case 'ArrowDown':
-                    movePlayer(0, 1);
-                    break;
-                case 'ArrowLeft':
-                    movePlayer(-1, 0);
-                    break;
-                case 'ArrowRight':
-                    movePlayer(1, 0);
-                    break;
-            }
-        });
     </script>
 </body>
 </html>
