@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隨機迷宮遊戲</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        canvas {
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mazeCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const cellSize = 40; // 每個迷宮格子的大小
+        const cols = 10;
+        const rows = 10;
+
+        // 圖片資源 (替換為實際圖片URL)
+        const images = {
+            player: 'player-image-url.png', // 玩家圖片
+            wall: 'wall-image-url.png',    // 牆圖片
+            ground: 'ground-image-url.jpg',// 地板圖片
+            exit: 'exit-image-url.png'     // 出口圖片
+        };
+
+        // 定義10種預設迷宮 (0: 空地, 1: 牆壁, 2: 出口)
+        const mazes = [
+            [
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 2],
+                [0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+                [0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+                [1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+                [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                [1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                [0, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+            ],
+            // 其他 9 個迷宮設計
+            [
+                [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+                [1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+                [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                [1, 0, 1, 0, 1, 0, 1, 1, 1, 0],
+                [0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ],
+            [
+                [0, 0, 0, 0, 0, 1, 1, 1, 1, 2],
+                [1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 1, 1, 1, 1, 0],
+                [0, 1, 0, 1, 0, 0, 0, 1, 1, 0],
+                [0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
+            ],
+            // 添加更多迷宮設計...
+        ];
+
+        // 隨機選擇迷宮
+        const maze = mazes[Math.floor(Math.random() * mazes.length)];
+
+        const player = { x: 0, y: 0 };
+
+        const loadedImages = {};
+        const loadImage = (key, src) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    loadedImages[key] = img;
+                    resolve();
+                };
+            });
+        };
+
+        Promise.all(
+            Object.entries(images).map(([key, src]) => loadImage(key, src))
+        ).then(() => {
+            render();
+        });
+
+        function drawMaze() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.drawImage(loadedImages.wall, x * cellSize, y * cellSize, cellSize, cellSize);
+                    } else if (maze[y][x] === 2) {
+                        ctx.drawImage(loadedImages.exit, x * cellSize, y * cellSize, cellSize, cellSize);
+                    } else {
+                        ctx.drawImage(loadedImages.ground, x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(
+                loadedImages.player,
+                player.x * cellSize,
+                player.y * cellSize,
+                cellSize,
+                cellSize
+            );
+        }
+
+        function movePlayer(dx, dy) {
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            if (
+                newX >= 0 &&
+                newY >= 0 &&
+                newX < cols &&
+                newY < rows &&
+                maze[newY][newX] !== 1
+            ) {
+                player.x = newX;
+                player.y = newY;
+                render();
+
+                if (maze[newY][newX] === 2) {
+                    alert('恭喜通關！');
+                }
+            }
+        }
+
+        function render() {
+            drawMaze();
+            drawPlayer();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
