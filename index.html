@@ -2,33 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, orientation=landscape">
-    <title>橫屏迷宮遊戲</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷宮遊戲</title>
     <style>
         body {
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #f4f4f4;
         }
         canvas {
             border: 2px solid #000;
-            width: 100vw;
-            height: auto;
+            max-width: 100vw;
+            max-height: 100vh;
         }
         #controls {
-            position: fixed;
-            bottom: 20px;
+            margin-top: 20px;
             display: flex;
-            justify-content: center;
-            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+        .control-row {
+            display: flex;
         }
         button {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             margin: 5px;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             border: 1px solid #000;
             border-radius: 10px;
@@ -54,10 +57,16 @@
 <body>
     <canvas id="mazeCanvas"></canvas>
     <div id="controls">
-        <button id="left">←</button>
-        <button id="up">↑</button>
-        <button id="down">↓</button>
-        <button id="right">→</button>
+        <div class="control-row">
+            <button id="up">↑</button>
+        </div>
+        <div class="control-row">
+            <button id="left">←</button>
+            <button id="right">→</button>
+        </div>
+        <div class="control-row">
+            <button id="down">↓</button>
+        </div>
     </div>
     <audio id="backgroundMusic" src="your-audio-url.mp3" loop></audio>
     <video id="fullscreen-video" src="your-video-url.mp4" controls></video>
@@ -67,9 +76,10 @@
         const backgroundMusic = document.getElementById('backgroundMusic');
         const fullscreenVideo = document.getElementById('fullscreen-video');
 
-        const cellSize = 40;
+        const cellSize = 40; 
         const cols = 10;
         const rows = 10;
+        let canvasWidth, canvasHeight;
 
         const images = {
             player: 'player-image-url.png',
@@ -78,20 +88,47 @@
             exit: 'exit-image-url.png'
         };
 
-        // 預設迷宮
-        const maze = [
-            [0, 1, 0, 0, 0, 0, 0, 0, 0, 2],
-            [0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
-            [0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
-            [1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
-            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-            [1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-            [0, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+        // 定義多個迷宮樣本
+        const mazes = [
+            [
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 2],
+                [0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+                [0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+                [1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+                [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                [1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                [0, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+            ],
+            [
+                [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+                [0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+                [1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+                [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                [1, 0, 1, 0, 1, 0, 1, 1, 1, 0],
+                [0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ],
+            [
+                [0, 0, 0, 0, 0, 1, 1, 1, 1, 2],
+                [1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 1, 1, 1, 1, 0],
+                [0, 1, 0, 1, 0, 0, 0, 1, 1, 0],
+                [0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
+            ]
         ];
 
+        const maze = mazes[Math.floor(Math.random() * mazes.length)];
         const player = { x: 0, y: 0 };
 
         const loadedImages = {};
@@ -115,18 +152,19 @@
         });
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvasWidth = cols * cellSize;
+            canvasHeight = rows * cellSize;
+
+            if (window.innerWidth < window.innerHeight) { // 直屏模式
+                canvas.style.width = `${window.innerWidth}px`;
+                canvas.style.height = `${window.innerWidth * (canvasHeight / canvasWidth)}px`;
+            } else { // 橫屏模式
+                canvas.style.width = `${window.innerHeight * (canvasWidth / canvasHeight)}px`;
+                canvas.style.height = `${window.innerHeight}px`;
+            }
         }
 
         function drawMaze() {
-            const mazeWidth = cols * cellSize;
-            const mazeHeight = rows * cellSize;
-            const scale = Math.min(canvas.width / mazeWidth, canvas.height / mazeHeight);
-
-            ctx.save();
-            ctx.scale(scale, scale);
-
             for (let y = 0; y < rows; y++) {
                 for (let x = 0; x < cols; x++) {
                     if (maze[y][x] === 1) {
@@ -138,18 +176,9 @@
                     }
                 }
             }
-
-            ctx.restore();
         }
 
         function drawPlayer() {
-            const mazeWidth = cols * cellSize;
-            const mazeHeight = rows * cellSize;
-            const scale = Math.min(canvas.width / mazeWidth, canvas.height / mazeHeight);
-
-            ctx.save();
-            ctx.scale(scale, scale);
-
             ctx.drawImage(
                 loadedImages.player,
                 player.x * cellSize,
@@ -157,8 +186,6 @@
                 cellSize,
                 cellSize
             );
-
-            ctx.restore();
         }
 
         function movePlayer(dx, dy) {
@@ -184,7 +211,6 @@
         }
 
         function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMaze();
             drawPlayer();
         }
