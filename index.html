@@ -2,30 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>迷宮遊戲</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, orientation=landscape">
+    <title>橫屏迷宮遊戲</title>
     <style>
         body {
             margin: 0;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #f4f4f4;
         }
         canvas {
             border: 2px solid #000;
-            width: 100%;
+            width: 100vw;
             height: auto;
         }
         #controls {
-            margin-top: 10px;
+            position: fixed;
+            bottom: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .control-row {
-            display: flex;
+            justify-content: center;
+            width: 100%;
         }
         button {
             width: 60px;
@@ -57,16 +54,10 @@
 <body>
     <canvas id="mazeCanvas"></canvas>
     <div id="controls">
-        <div class="control-row">
-            <button id="up">↑</button>
-        </div>
-        <div class="control-row">
-            <button id="left">←</button>
-            <button id="right">→</button>
-        </div>
-        <div class="control-row">
-            <button id="down">↓</button>
-        </div>
+        <button id="left">←</button>
+        <button id="up">↑</button>
+        <button id="down">↓</button>
+        <button id="right">→</button>
     </div>
     <audio id="backgroundMusic" src="your-audio-url.mp3" loop></audio>
     <video id="fullscreen-video" src="your-video-url.mp4" controls></video>
