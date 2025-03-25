@@ -15,11 +15,11 @@
         }
         canvas {
             border: 2px solid #000;
-            max-width: 100vw;
-            max-height: 100vh;
+            width: 100%;
+            height: auto;
         }
         #controls {
-            margin-top: 20px;
+            margin-top: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -28,10 +28,10 @@
             display: flex;
         }
         button {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             margin: 5px;
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             border: 1px solid #000;
             border-radius: 10px;
@@ -76,10 +76,9 @@
         const backgroundMusic = document.getElementById('backgroundMusic');
         const fullscreenVideo = document.getElementById('fullscreen-video');
 
-        const cellSize = 40; 
+        const cellSize = 40;
         const cols = 10;
         const rows = 10;
-        let canvasWidth, canvasHeight;
 
         const images = {
             player: 'player-image-url.png',
@@ -88,47 +87,20 @@
             exit: 'exit-image-url.png'
         };
 
-        // 定義多個迷宮樣本
-        const mazes = [
-            [
-                [0, 1, 0, 0, 0, 0, 0, 0, 0, 2],
-                [0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
-                [0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
-                [1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
-                [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-                [1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
-                [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-                [0, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-            ],
-            [
-                [0, 0, 0, 1, 1, 1, 1, 1, 1, 2],
-                [0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
-                [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-                [1, 0, 1, 0, 1, 0, 1, 1, 1, 0],
-                [0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-                [0, 1, 1, 1, 1, 1, 1, 0, 1, 1],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-            ],
-            [
-                [0, 0, 0, 0, 0, 1, 1, 1, 1, 2],
-                [1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-                [0, 0, 0, 1, 0, 1, 1, 1, 1, 0],
-                [0, 1, 0, 1, 0, 0, 0, 1, 1, 0],
-                [0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-                [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
-            ]
+        // 預設迷宮
+        const maze = [
+            [0, 1, 0, 0, 0, 0, 0, 0, 0, 2],
+            [0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+            [0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            [1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+            [1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+            [0, 1, 1, 1, 1, 0, 0, 0, 0, 0]
         ];
 
-        const maze = mazes[Math.floor(Math.random() * mazes.length)];
         const player = { x: 0, y: 0 };
 
         const loadedImages = {};
@@ -152,19 +124,18 @@
         });
 
         function resizeCanvas() {
-            canvasWidth = cols * cellSize;
-            canvasHeight = rows * cellSize;
-
-            if (window.innerWidth < window.innerHeight) { // 直屏模式
-                canvas.style.width = `${window.innerWidth}px`;
-                canvas.style.height = `${window.innerWidth * (canvasHeight / canvasWidth)}px`;
-            } else { // 橫屏模式
-                canvas.style.width = `${window.innerHeight * (canvasWidth / canvasHeight)}px`;
-                canvas.style.height = `${window.innerHeight}px`;
-            }
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
 
         function drawMaze() {
+            const mazeWidth = cols * cellSize;
+            const mazeHeight = rows * cellSize;
+            const scale = Math.min(canvas.width / mazeWidth, canvas.height / mazeHeight);
+
+            ctx.save();
+            ctx.scale(scale, scale);
+
             for (let y = 0; y < rows; y++) {
                 for (let x = 0; x < cols; x++) {
                     if (maze[y][x] === 1) {
@@ -176,9 +147,18 @@
                     }
                 }
             }
+
+            ctx.restore();
         }
 
         function drawPlayer() {
+            const mazeWidth = cols * cellSize;
+            const mazeHeight = rows * cellSize;
+            const scale = Math.min(canvas.width / mazeWidth, canvas.height / mazeHeight);
+
+            ctx.save();
+            ctx.scale(scale, scale);
+
             ctx.drawImage(
                 loadedImages.player,
                 player.x * cellSize,
@@ -186,6 +166,8 @@
                 cellSize,
                 cellSize
             );
+
+            ctx.restore();
         }
 
         function movePlayer(dx, dy) {
@@ -211,6 +193,7 @@
         }
 
         function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMaze();
             drawPlayer();
         }
